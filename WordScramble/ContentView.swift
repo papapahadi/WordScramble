@@ -16,13 +16,20 @@ struct ContentView: View {
     @State private var errorTitle = ""
     @State private var showingError = false
     
+    @State private var score = 0
+    
     var body: some View {
         NavigationStack{
             List{
                 Section{
                     TextField("enter your word", text: $newWord)
                         .textInputAutocapitalization(.never)
+                    
+                    Text("Score : \(score)")
                 }
+                
+                
+               
                 
                 Section{
                     ForEach(usedWords, id: \.self){ word in
@@ -33,8 +40,12 @@ struct ContentView: View {
                         
                     }
                 }
+                
             }
             .navigationTitle(rootWord)
+            .toolbar{
+                Button("next word", action: startGame)
+            }
             .onSubmit {
                 addNewWord()
             }
@@ -68,6 +79,13 @@ struct ContentView: View {
             return
         }
         
+        guard disAllow(word: answer) else {
+            wordError(title: "word too small", message: "mf this is not nursery. think of a big word")
+            return
+        }
+        
+        score += answer.count
+        
         withAnimation{
             usedWords.insert(answer, at: 0)
         }
@@ -79,10 +97,19 @@ struct ContentView: View {
             if let startWords = try? String(contentsOf: startWordsURL){
                 let allWords = startWords.components(separatedBy: "\n")
                 rootWord = allWords.randomElement() ?? "silkworm"
+                usedWords = [String]()
+                score = 0
                 return
             }
         }
         fatalError("Could not load start.txt from the bundle.")
+    }
+    
+    func disAllow(word : String) -> Bool {
+        if (word == rootWord) || (word.count < 3) {
+            return false
+        }
+        return true
     }
     
     func isOriginal(word : String) -> Bool {
